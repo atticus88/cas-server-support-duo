@@ -5,7 +5,7 @@ import edu.ucr.cnc.cas.support.duo.DuoConfiguration;
 import org.jasig.cas.authentication.handler.AuthenticationException;
 import org.jasig.cas.authentication.handler.AuthenticationHandler;
 import org.jasig.cas.authentication.handler.UncategorizedAuthenticationException;
-import org.jasig.cas.authentication.principal.Credentials;
+import org.jasig.cas.authentication.Credential;
 import edu.usf.cims.cas.support.duo.authentication.principal.DuoCredentials;
 import com.duosecurity.DuoWeb;
 import javax.validation.constraints.NotNull;
@@ -43,7 +43,7 @@ public class DuoAuthenticationHandler implements AuthenticationHandler {
      * @throws AuthenticationException
      */
     @Override
-    public boolean authenticate(Credentials credentials) throws AuthenticationException {
+    public boolean authenticate(Credential credentials) throws AuthenticationException {
         final DuoCredentials duoCredentials = (DuoCredentials)credentials;
 
         // Do an out of band request using the DuoWeb api to the hosted duo service, if it is successful
@@ -85,7 +85,7 @@ public class DuoAuthenticationHandler implements AuthenticationHandler {
      * @return a boolean indicating whether it is supported
      */
     @Override
-    public boolean supports(Credentials credentials) {
+    public boolean supports(Credential credentials) {
         return (credentials.getClass() == DuoCredentials.class);
     }
 

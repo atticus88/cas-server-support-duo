@@ -1,7 +1,7 @@
 package edu.usf.cims.cas.support.duo.authentication.principal;
 
 import com.duosecurity.DuoWeb;
-import org.jasig.cas.authentication.principal.Credentials;
+import org.jasig.cas.authentication.Credential;
 import edu.ucr.cnc.cas.support.duo.DuoConfiguration;
 import org.jasig.cas.authentication.principal.CredentialsToPrincipalResolver;
 import org.jasig.cas.authentication.principal.Principal;
@@ -30,7 +30,7 @@ public class DuoCredentialsToPrincipalResolver implements CredentialsToPrincipal
      * @return a {@link Principal} based on a {@link DuoCredentials} credential
      */
     @Override
-    public Principal resolvePrincipal(Credentials credentials) {
+    public Principal resolvePrincipal(Credential credentials) {
         final DuoCredentials duoCredentials = (DuoCredentials)credentials;
 
         if (duoCredentials.getPrincipal().getAttributes() != null) {
@@ -51,7 +51,7 @@ public class DuoCredentialsToPrincipalResolver implements CredentialsToPrincipal
      * @return a boolean indicating whether it is supported
      */
     @Override
-    public boolean supports(Credentials credentials) {
+    public boolean supports(Credential credentials) {
         return (credentials.getClass() == DuoCredentials.class);
     }
 }

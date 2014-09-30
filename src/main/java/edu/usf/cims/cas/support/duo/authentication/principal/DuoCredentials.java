@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.usf.cims.cas.support.duo.authentication.principal.DuoCredentials;
-import org.jasig.cas.authentication.principal.Credentials;
+import org.jasig.cas.authentication.Credential;
 import org.jasig.cas.authentication.Authentication;
 import org.jasig.cas.authentication.principal.UsernamePasswordCredentials;
 import org.jasig.cas.authentication.principal.Principal;
@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
  * @author Michael Kennedy <michael.kennedy@ucr.edu>
  * @version 1.1
  */
-public class DuoCredentials implements Credentials {
+public class DuoCredentials implements Credential {
 
     private static final long serialVersionUID = -2938374689263928372L;
 

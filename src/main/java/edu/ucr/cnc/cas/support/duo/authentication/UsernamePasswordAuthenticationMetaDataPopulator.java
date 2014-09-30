@@ -4,7 +4,7 @@ import edu.ucr.cnc.cas.support.duo.CasConstants;
 import org.jasig.cas.authentication.Authentication;
 import org.jasig.cas.authentication.AuthenticationMetaDataPopulator;
 import org.jasig.cas.authentication.MutableAuthentication;
-import org.jasig.cas.authentication.principal.Credentials;
+import org.jasig.cas.authentication.Credential;
 import org.jasig.cas.authentication.principal.Principal;
 import org.jasig.cas.authentication.principal.SimplePrincipal;
 import org.jasig.cas.authentication.principal.UsernamePasswordCredentials;
@@ -30,7 +30,7 @@ public class UsernamePasswordAuthenticationMetaDataPopulator implements Authenti
      * @return
      */
     @Override
-    public Authentication populateAttributes(Authentication authentication, Credentials credentials) {
+    public Authentication populateAttributes(Authentication authentication, Credential credentials) {
 
         // Only do anything if the credential being provided is of type UsernamePasswordCredentials
         if (credentials instanceof UsernamePasswordCredentials) {

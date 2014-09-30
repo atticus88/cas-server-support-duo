@@ -5,7 +5,7 @@ import edu.ucr.cnc.cas.support.duo.CasConstants;
 import org.jasig.cas.authentication.Authentication;
 import org.jasig.cas.authentication.AuthenticationMetaDataPopulator;
 import org.jasig.cas.authentication.MutableAuthentication;
-import org.jasig.cas.authentication.principal.Credentials;
+import org.jasig.cas.authentication.Credential;
 import org.jasig.cas.authentication.principal.Principal;
 import org.jasig.cas.authentication.principal.SimplePrincipal;
 import org.slf4j.Logger;
@@ -31,7 +31,7 @@ public class DuoAuthenticationMetaDataPopulator implements AuthenticationMetaDat
      * @return
      */
     @Override
-    public Authentication populateAttributes(Authentication authentication, Credentials credentials) {
+    public Authentication populateAttributes(Authentication authentication, Credential credentials) {
 
         // Only do anything if the credentials being passed is of type DuoCredentials
         if (credentials instanceof DuoCredentials) {
