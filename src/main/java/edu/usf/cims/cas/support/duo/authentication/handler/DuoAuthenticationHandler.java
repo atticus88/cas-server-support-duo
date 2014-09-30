@@ -3,7 +3,7 @@ package edu.usf.cims.cas.support.duo.authentication.handler;
 import edu.ucr.cnc.cas.support.duo.DuoConfiguration;
 
 import org.jasig.cas.authentication.handler.AuthenticationException;
-import org.jasig.cas.authentication.handler.AuthenticationHandler;
+import org.jasig.cas.authentication.AuthenticationHandler;
 import org.jasig.cas.authentication.handler.UncategorizedAuthenticationException;
 import org.jasig.cas.authentication.Credential;
 import edu.usf.cims.cas.support.duo.authentication.principal.DuoCredentials;
