@@ -4,6 +4,7 @@ import edu.ucr.cnc.cas.support.duo.DuoConfiguration;
 import org.jasig.cas.authentication.HandlerResult;
 import org.jasig.cas.authentication.handler.AuthenticationException;
 import org.jasig.cas.authentication.AbstractAuthenticationHandler;
+import org.jasig.cas.authentication.AuthenticationHandler;
 import org.jasig.cas.authentication.handler.UncategorizedAuthenticationException;
 import org.jasig.cas.authentication.principal.Principal;
 import org.jasig.cas.authentication.Credential;
@@ -30,20 +31,19 @@ import org.slf4j.LoggerFactory;
  *
  */
 
-public final class DuoAuthenticationHandler extends AbstractAuthenticationHandler {
+public final class DuoAuthenticationHandler implements AuthenticationHandler {
   
     private static final Logger LOGGER = LoggerFactory.getLogger(DuoAuthenticationHandler.class);
+   
     @NotNull
     private DuoConfiguration duoConfiguration;
 
     @NotNull
-    private TicketRegistry ticketRegistry;
+    private String name = DuoAuthenticationHandler.class.getSimpleName();
 
     @Override
     public HandlerResult authenticate(final Credential credential) throws GeneralSecurityException {
         final DuoCredential c = (DuoCredential) credential;
-
-
 
 	String duoVerifyResponse = DuoWeb.verifyResponse(this.duoConfiguration.getIntegrationKey(), this.duoConfiguration.getSecretKey(), this.duoConfiguration.getApplicationKey(), c.getSignedDuoResponse());
 	
@@ -66,15 +66,16 @@ public final class DuoAuthenticationHandler extends AbstractAuthenticationHandle
         return credential instanceof DuoCredential;
     }
 
+    @Override
+    public String getName() {
+        return this.name;
+    }
+
     public DuoConfiguration getDuoConfiguration() {
         return duoConfiguration;
     }
 
     public void setDuoConfiguration(DuoConfiguration duoConfiguration) {
         this.duoConfiguration = duoConfiguration;
-    }
-
-    public void setTicketRegistry(final TicketRegistry ticketRegistry) {
-        this.ticketRegistry = ticketRegistry;
     }
 }
