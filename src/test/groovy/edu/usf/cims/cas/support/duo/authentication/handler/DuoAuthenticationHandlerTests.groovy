@@ -5,12 +5,12 @@ import com.duosecurity.*
 import edu.ucr.cnc.cas.support.duo.DuoConfiguration
 import org.jasig.cas.authentication.principal.Principal
 import org.jasig.cas.authentication.Authentication
-import edu.usf.cims.cas.support.duo.authentication.principal.DuoCredentials
-import org.jasig.cas.authentication.principal.UsernamePasswordCredentials
+import edu.usf.cims.cas.support.duo.authentication.principal.DuoCredential
+import org.jasig.cas.authentication.UsernamePasswordCredential
 import edu.usf.cims.cas.support.duo.authentication.handler.DuoAuthenticationHandler
 import edu.usf.cims.cas.support.duo.authentication.principal.DuoCredentialsToPrincipalResolver
 import edu.ucr.cnc.cas.support.duo.CasConstants
-
+import javax.security.auth.login.FailedLoginException
 
 class DuoAuthenticationHandlerTests extends Specification {
 
@@ -31,10 +31,10 @@ class DuoAuthenticationHandlerTests extends Specification {
       authentication.principal >> principal
       principal.id  >> USER
 
-      def credentials = new UsernamePasswordCredentials()
+      def credentials = new UsernamePasswordCredential()
       credentials.username = USER
       
-      def duoCredentials = new DuoCredentials()
+      def duoCredentials = new DuoCredential()
       duoCredentials.setFirstAuthentication(authentication)
 
       def request_sig = DuoWeb.signRequest(IKEY, SKEY, AKEY, USER)
@@ -49,7 +49,7 @@ class DuoAuthenticationHandlerTests extends Specification {
       def authResult = ah.authenticate(duoCredentials)
 
     then:
-      authResult == true
+      authResult.principal == principal
   }
 
   def "Failed Authentication"(){
@@ -59,10 +59,10 @@ class DuoAuthenticationHandlerTests extends Specification {
       authentication.principal >> principal
       principal.id  >> USER
 
-      def credentials = new UsernamePasswordCredentials()
+      def credentials = new UsernamePasswordCredential()
       credentials.username = USER
       
-      def duoCredentials = new DuoCredentials()
+      def duoCredentials = new DuoCredential()
       duoCredentials.setFirstAuthentication(authentication)
 
       def request_sig = DuoWeb.signRequest(IKEY, SKEY, AKEY, USER)
@@ -77,7 +77,9 @@ class DuoAuthenticationHandlerTests extends Specification {
       def authResult = ah.authenticate(duoCredentials)
 
     then:
-      authResult == false
+      thrown(FailedLoginException)
+      //authResult.principal == principal
+      //authResult == false
   }
 
   def "Failed Authentication - username mismatch"(){
@@ -85,10 +87,10 @@ class DuoAuthenticationHandlerTests extends Specification {
       authentication.principal >> principal
       principal.id  >> "other_user"
 
-      def credentials = new UsernamePasswordCredentials()
+      def credentials = new UsernamePasswordCredential()
       credentials.username = USER
       
-      def duoCredentials = new DuoCredentials()
+      def duoCredentials = new DuoCredential()
       duoCredentials.setFirstAuthentication(authentication)
 
       def request_sig = DuoWeb.signRequest(IKEY, SKEY, AKEY, USER)
@@ -103,12 +105,14 @@ class DuoAuthenticationHandlerTests extends Specification {
       def authResult = ah.authenticate(duoCredentials)
 
     then:
-      authResult == false
+      thrown(FailedLoginException)
+      //authResult.principal == principal
+      //authResult == false
   }
 
-  def "Support DuoCredentials"(){
+  def "Support DuoCredential"(){
     given:
-      def duoCredentials = new DuoCredentials()
+      def duoCredentials = new DuoCredential()
       def ah = new DuoAuthenticationHandler()
 
     when:
@@ -118,9 +122,9 @@ class DuoAuthenticationHandlerTests extends Specification {
       results == true;
   }
 
-  def "Support only DuoCredentials"(){
+  def "Support only DuoCredential"(){
     given:
-      def duoCredentials = new UsernamePasswordCredentials()
+      def duoCredentials = new UsernamePasswordCredential()
       def ah = new DuoAuthenticationHandler()
 
     when:

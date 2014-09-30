@@ -3,7 +3,7 @@ package edu.usf.cims.cas.support.duo.authentication.principal;
 import com.duosecurity.DuoWeb;
 import org.jasig.cas.authentication.Credential;
 import edu.ucr.cnc.cas.support.duo.DuoConfiguration;
-import org.jasig.cas.authentication.principal.CredentialsToPrincipalResolver;
+import org.jasig.cas.authentication.principal.PrincipalResolver;
 import org.jasig.cas.authentication.principal.Principal;
 import org.jasig.cas.authentication.principal.SimplePrincipal;
 import javax.validation.constraints.NotNull;
@@ -19,7 +19,7 @@ import javax.validation.constraints.NotNull;
  * @author Michael Kennedy <michael.kennedy@ucr.edu>
  * @version 1.1
  */
-public class DuoCredentialsToPrincipalResolver implements CredentialsToPrincipalResolver {
+public class DuoCredentialsToPrincipalResolver implements PrincipalResolver {
 
     SimplePrincipal simplePrincipal;
 
@@ -30,7 +30,7 @@ public class DuoCredentialsToPrincipalResolver implements CredentialsToPrincipal
      * @return a {@link Principal} based on a {@link DuoCredentials} credential
      */
     @Override
-    public Principal resolvePrincipal(Credential credentials) {
+    public Principal resolve(Credential credentials) {
         final DuoCredentials duoCredentials = (DuoCredentials)credentials;
 
         if (duoCredentials.getPrincipal().getAttributes() != null) {

@@ -99,7 +99,7 @@ class LdapUserMultiFactorLookupManagerTests extends Specification {
         def result = lookupManager.getMFARequired(principal)
 
       then:
-        result == true
+        result == true 
     }
 
   def "Login with a user that does not require MFA"(){

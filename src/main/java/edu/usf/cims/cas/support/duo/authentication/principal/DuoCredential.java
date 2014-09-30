@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
  * @author Michael Kennedy <michael.kennedy@ucr.edu>
  * @version 1.1
  */
-public class DuoCredentials implements Credential {
+public class DuoCredential implements Credential {
 
     private static final long serialVersionUID = -2938374689263928372L;
 

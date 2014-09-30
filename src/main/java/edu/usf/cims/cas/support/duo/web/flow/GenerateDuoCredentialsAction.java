@@ -8,7 +8,7 @@ import org.jasig.cas.ticket.TicketGrantingTicket;
 import org.jasig.cas.ticket.registry.TicketRegistry;
 import org.jasig.cas.authentication.Authentication;
 import org.jasig.cas.authentication.Credential;
-import org.jasig.cas.authentication.principal.UsernamePasswordCredentials;
+import org.jasig.cas.authentication.UsernamePasswordCredential;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.webflow.execution.RequestContext;
@@ -22,7 +22,7 @@ public final class GenerateDuoCredentialsAction {
 
     public String createDuoCredentials(RequestContext context) {
 
-        UsernamePasswordCredentials origCredentials = (UsernamePasswordCredentials) context.getFlowScope().get("credentials");
+        UsernamePasswordCredential origCredentials = (UsernamePasswordCredential) context.getFlowScope().get("credentials");
 
         /* Get the TGT id from the request scope  (this was an inital or re-authentication) */
         String ticketGrantingTicketId = (String)context.getRequestScope().get("ticketGrantingTicketId");
@@ -51,7 +51,7 @@ public final class GenerateDuoCredentialsAction {
          * used during the inital login.  Copy the username stored in the TGT into a new UserPasswordCredentials object.
          */
         if((origCredentials == null) || (origCredentials.getUsername() == null)){
-            origCredentials = new UsernamePasswordCredentials();
+            origCredentials = new UsernamePasswordCredential();
             origCredentials.setUsername(ticketGrantingTicket.getAuthentication().getPrincipal().getId());
         }
 

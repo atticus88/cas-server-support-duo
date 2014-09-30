@@ -43,8 +43,9 @@ public class LdapUserMultiFactorLookupManager implements UserMultiFactorLookupMa
     @Override
     public boolean getMFARequired(Principal principal) {
 
-        String searchFilter = LdapUtils.getFilterWithValues(getFilter(), principal.getId());
+        //String searchFilter = LdapUtils.getFilterWithValues(getFilter(), principal.getId());
 
+	String searchFilter = getFilter().replace("%u", principal.getId()); //"(uid="+principal.getId()+")";
         String result = "";
 
         LdapTemplate ldapTemplate = new LdapTemplate(this.contextSource);

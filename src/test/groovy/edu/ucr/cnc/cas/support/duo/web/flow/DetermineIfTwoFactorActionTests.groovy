@@ -5,7 +5,7 @@ import org.jasig.cas.authentication.principal.WebApplicationService
 import org.jasig.cas.services.ServicesManager
 import org.jasig.cas.ticket.registry.TicketRegistry
 import org.jasig.cas.services.UnauthorizedServiceException
-import org.jasig.cas.authentication.principal.UsernamePasswordCredentials
+import org.jasig.cas.authentication.UsernamePasswordCredential
 import org.jasig.cas.authentication.principal.Principal
 import org.jasig.cas.authentication.Authentication
 import org.jasig.cas.ticket.TicketGrantingTicket
@@ -37,7 +37,7 @@ class DetermineIfTwoFactorActionTests extends Specification {
   **/
   def setup() {
 
-    def credentials = new UsernamePasswordCredentials()
+    def credentials = new UsernamePasswordCredential()
     credentials.username = "testUser"
 
     //Service URL the user is accessing

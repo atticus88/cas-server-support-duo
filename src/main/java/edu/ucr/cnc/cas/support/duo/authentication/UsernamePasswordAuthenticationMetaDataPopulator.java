@@ -3,11 +3,13 @@ package edu.ucr.cnc.cas.support.duo.authentication;
 import edu.ucr.cnc.cas.support.duo.CasConstants;
 import org.jasig.cas.authentication.Authentication;
 import org.jasig.cas.authentication.AuthenticationMetaDataPopulator;
-import org.jasig.cas.authentication.MutableAuthentication;
+import edu.ucr.cnc.cas.support.duo.authentication.MutableAuthentication;
+//import org.jasig.cas.authentication.MutableAuthentication;
+import org.jasig.cas.authentication.AuthenticationBuilder;
 import org.jasig.cas.authentication.Credential;
 import org.jasig.cas.authentication.principal.Principal;
 import org.jasig.cas.authentication.principal.SimplePrincipal;
-import org.jasig.cas.authentication.principal.UsernamePasswordCredentials;
+import org.jasig.cas.authentication.UsernamePasswordCredential;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,21 +32,20 @@ public class UsernamePasswordAuthenticationMetaDataPopulator implements Authenti
      * @return
      */
     @Override
-    public Authentication populateAttributes(Authentication authentication, Credential credentials) {
+    public void populateAttributes(AuthenticationBuilder authentication, Credential credentials) {
 
         // Only do anything if the credential being provided is of type UsernamePasswordCredentials
-        if (credentials instanceof UsernamePasswordCredentials) {
+        if (credentials instanceof UsernamePasswordCredential) {
             Principal simplePrincipal = new SimplePrincipal(authentication.getPrincipal().getId(), authentication.getPrincipal().getAttributes());
-            MutableAuthentication mutableAuthentication = new MutableAuthentication(simplePrincipal, authentication.getAuthenticatedDate());
+            MutableAuthentication mutableAuthentication = new MutableAuthentication(simplePrincipal, authentication.getAuthenticationDate());
 
-            mutableAuthentication.getAttributes().putAll(authentication.getAttributes());
-            mutableAuthentication.getAttributes().put(CasConstants.LOA_ATTRIBUTE, CasConstants.LOA_SF);
+            authentication.getAttributes().put(CasConstants.LOA_ATTRIBUTE, CasConstants.LOA_SF);
 
             LOGGER.debug("Adding LOA of {} to Authentication object for {}", CasConstants.LOA_SF, simplePrincipal.getId());
 
-            return mutableAuthentication;
+            //return mutableAuthentication;
         }
 
-        return authentication;
+        //return authentication;
     }
 }

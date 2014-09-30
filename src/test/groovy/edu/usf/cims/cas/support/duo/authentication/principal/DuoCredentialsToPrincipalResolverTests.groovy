@@ -4,7 +4,7 @@ import spock.lang.Specification
 import com.duosecurity.*
 import org.jasig.cas.authentication.principal.Principal
 import org.jasig.cas.authentication.Authentication
-import org.jasig.cas.authentication.principal.UsernamePasswordCredentials
+import org.jasig.cas.authentication.UsernamePasswordCredential
 import edu.usf.cims.cas.support.duo.authentication.principal.DuoCredentials
 import edu.usf.cims.cas.support.duo.authentication.principal.DuoCredentialsToPrincipalResolver
 
@@ -26,7 +26,7 @@ class DuoCredentialsToPrincipalResolverTests extends Specification {
       def c2p = new DuoCredentialsToPrincipalResolver()
 
     when:
-      def principal = c2p.resolvePrincipal(duoCredentials)
+      def principal = c2p.resolve(duoCredentials)
 
     then:
       principal.getId() == "testUser"
@@ -43,7 +43,7 @@ class DuoCredentialsToPrincipalResolverTests extends Specification {
       def c2p = new DuoCredentialsToPrincipalResolver()
 
     when:
-      def principal = c2p.resolvePrincipal(duoCredentials)
+      def principal = c2p.resolve(duoCredentials)
 
     then:
       principal.getId() == "testUser"
@@ -64,7 +64,7 @@ class DuoCredentialsToPrincipalResolverTests extends Specification {
 
   def "Support ONLY DuoCredentials"(){
     given:
-      def upCredentials = new UsernamePasswordCredentials()
+      def upCredentials = new UsernamePasswordCredential()
       def c2p = new DuoCredentialsToPrincipalResolver()
 
     when:

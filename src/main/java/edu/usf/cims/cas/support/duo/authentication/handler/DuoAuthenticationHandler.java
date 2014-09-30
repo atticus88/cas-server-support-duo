@@ -1,15 +1,20 @@
 package edu.usf.cims.cas.support.duo.authentication.handler;
 
 import edu.ucr.cnc.cas.support.duo.DuoConfiguration;
-
+import org.jasig.cas.authentication.HandlerResult;
 import org.jasig.cas.authentication.handler.AuthenticationException;
-import org.jasig.cas.authentication.AuthenticationHandler;
+import org.jasig.cas.authentication.AbstractAuthenticationHandler;
 import org.jasig.cas.authentication.handler.UncategorizedAuthenticationException;
+import org.jasig.cas.authentication.principal.Principal;
 import org.jasig.cas.authentication.Credential;
-import edu.usf.cims.cas.support.duo.authentication.principal.DuoCredentials;
+import edu.usf.cims.cas.support.duo.authentication.principal.DuoCredential;
+import org.jasig.cas.ticket.TicketGrantingTicket;
+import org.jasig.cas.ticket.registry.TicketRegistry;
+import org.jasig.cas.authentication.BasicCredentialMetaData;
+import java.security.GeneralSecurityException;
 import com.duosecurity.DuoWeb;
 import javax.validation.constraints.NotNull;
-
+import javax.security.auth.login.FailedLoginException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,86 +29,52 @@ import org.slf4j.LoggerFactory;
  * @version 1.1
  *
  */
-public class DuoAuthenticationHandler implements AuthenticationHandler {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(DuoAuthenticationHandler.class);
-
-    /**
-     * This should be injected via Spring in duoConfiguration.xml
-     */
+public final class DuoAuthenticationHandler extends AbstractAuthenticationHandler {
+  
+    private static final Logger LOGGER = LoggerFactory.getLogger(DuoAuthenticationHandler.class);
     @NotNull
     private DuoConfiguration duoConfiguration;
 
-    /**
-     * Returns a boolean indicating whether an authentication using a {@link DuoCredentials} credential
-     * was successful.
-     *
-     * @param credentials a DuoCredentials object
-     * @return a boolean indicating whether an authentication was successful
-     * @throws AuthenticationException
-     */
+    @NotNull
+    private TicketRegistry ticketRegistry;
+
     @Override
-    public boolean authenticate(Credential credentials) throws AuthenticationException {
-        final DuoCredentials duoCredentials = (DuoCredentials)credentials;
+    public HandlerResult authenticate(final Credential credential) throws GeneralSecurityException {
+        final DuoCredential c = (DuoCredential) credential;
 
-        // Do an out of band request using the DuoWeb api to the hosted duo service, if it is successful
-        // it will return a String containing the username of the successfully authenticated user, but will
-        // return a blank String otherwise.
-        String duoVerifyResponse = DuoWeb.verifyResponse(this.duoConfiguration.getIntegrationKey(),
-                this.duoConfiguration.getSecretKey(),
-                this.duoConfiguration.getApplicationKey(),
-                duoCredentials.getSignedDuoResponse());
 
-        //Make sure verifyResponse doesn't return null
-        if(duoVerifyResponse == null){
-          duoVerifyResponse = "";
+
+	String duoVerifyResponse = DuoWeb.verifyResponse(this.duoConfiguration.getIntegrationKey(), this.duoConfiguration.getSecretKey(), this.duoConfiguration.getApplicationKey(), c.getSignedDuoResponse());
+	
+	final Principal principal = c.getPrincipal();
+	
+	if(duoVerifyResponse == null){
+        	duoVerifyResponse = "";
         }
 
         LOGGER.debug("Response from Duo verify: [{}]", duoVerifyResponse);
-
-        if(duoVerifyResponse.equals(duoCredentials.getPrincipal().getId())){
-          LOGGER.info("Successful Duo authentication for [{}]", duoCredentials.getPrincipal().getId());
-          return true;
-        } else if(duoVerifyResponse.equals("")){
-          LOGGER.warn("Duo authentication failed for [{}]", duoCredentials.getPrincipal().getId());
-          return false;
-        } else {
-          LOGGER.error("Duo authentication error! Login username: [{}], Duo response: [{}]", 
-                        duoCredentials.getPrincipal().getId(),
-                        duoVerifyResponse);
-
-          LOGGER.debug("first Principal: [{}]", duoCredentials.getPrincipal());
-          return false;
-        }
+	if(duoVerifyResponse.equals(c.getPrincipal().getId())){
+        	return new HandlerResult(this, new BasicCredentialMetaData(c), principal);
+	} else {
+		throw new FailedLoginException("Duo Authentication Failed");
+	}
     }
 
-    /**
-     * Determines whether a particular credential is supported by this {@link AuthenticationHandler}. This
-     * only supports {@link DuoCredentials}.
-     *
-     * @param credentials any {@link Credentials} object
-     * @return a boolean indicating whether it is supported
-     */
     @Override
-    public boolean supports(Credential credentials) {
-        return (credentials.getClass() == DuoCredentials.class);
+    public boolean supports(final Credential credential) {
+        return credential instanceof DuoCredential;
     }
 
-    /**
-     * Getter method for duoConfiguration
-     *
-     * @return a {@link DuoConfiguration} object
-     */
     public DuoConfiguration getDuoConfiguration() {
         return duoConfiguration;
     }
 
-    /**
-     * Used by Spring injection to set the duoConfiguration object
-     *
-     * @param duoConfiguration
-     */
     public void setDuoConfiguration(DuoConfiguration duoConfiguration) {
         this.duoConfiguration = duoConfiguration;
+    }
+
+    public void setTicketRegistry(final TicketRegistry ticketRegistry) {
+        this.ticketRegistry = ticketRegistry;
     }
 }

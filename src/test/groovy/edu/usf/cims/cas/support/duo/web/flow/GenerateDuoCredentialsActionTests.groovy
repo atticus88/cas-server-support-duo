@@ -7,7 +7,7 @@ import org.jasig.cas.services.ServicesManager
 import org.jasig.cas.ticket.registry.TicketRegistry
 import org.jasig.cas.ticket.TicketGrantingTicket
 import org.jasig.cas.authentication.principal.Principal
-import org.jasig.cas.authentication.principal.UsernamePasswordCredentials;
+import org.jasig.cas.authentication.UsernamePasswordCredential;
 import org.jasig.cas.authentication.Authentication
 import edu.ucr.cnc.cas.support.duo.CasConstants
 import edu.usf.cims.cas.support.duo.authentication.principal.DuoCredentials
@@ -46,7 +46,7 @@ class GenerateDuoCredentialsActionTests extends Specification {
   def "Create a new DuoCredential during intial login"(){
     given:
 
-      def credentials = new UsernamePasswordCredentials()
+      def credentials = new UsernamePasswordCredential()
       credentials.username = "testUser"
 
       //Configure the mocked web request
@@ -86,7 +86,7 @@ class GenerateDuoCredentialsActionTests extends Specification {
   def "Create a new DuoCredential after CAS session has timed-out and user reauthenticated"(){
     given:
 
-      def credentials = new UsernamePasswordCredentials()
+      def credentials = new UsernamePasswordCredential()
       credentials.username = "testUser"
 
       //Configure the mocked web request
@@ -107,7 +107,7 @@ class GenerateDuoCredentialsActionTests extends Specification {
 
   def "Do not create a DuoCredential when there is no TGTid"(){
     given:
-      def credentials = new UsernamePasswordCredentials()
+      def credentials = new UsernamePasswordCredential()
       credentials.username = "testUser"
 
       //Configure the mocked web request
@@ -126,7 +126,7 @@ class GenerateDuoCredentialsActionTests extends Specification {
 
   def "Do not create a DuoCredential when there is no first-factor authentication"(){
     given:
-      def credentials = new UsernamePasswordCredentials()
+      def credentials = new UsernamePasswordCredential()
       credentials.username = "testUser"
 
       //Configure the mocked web request
