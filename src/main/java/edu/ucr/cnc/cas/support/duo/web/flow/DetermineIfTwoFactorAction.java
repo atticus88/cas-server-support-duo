@@ -52,6 +52,7 @@ public class DetermineIfTwoFactorAction extends AbstractAction {
 
         this.authenticationSupport = new DefaultAuthenticationSupport(ticketRegistry);
 
+	Service service = null;
         boolean serviceMFARequired = false;
         boolean userMFARequired = false;
 
@@ -74,9 +75,12 @@ public class DetermineIfTwoFactorAction extends AbstractAction {
         /* Only perform this if a servicesManager and a ServiceMultiFactorLookupManager are specified in MultiFactorCasConfiguration.xml */
         if((this.servicesManager != null) && (this.serviceMultiFactorLookupManager != null)) {
             /* Get the registered service from flow scope */
-            Service service = (Service)context.getFlowScope().get("service");
+            LOGGER.debug("Get Registered Services");
+            service = (Service)context.getFlowScope().get("service");
             RegisteredService registeredService = this.servicesManager.findServiceBy(service);
+            LOGGER.debug("Multi-factor required by service. {}", registeredService);
             serviceMFARequired = this.serviceMultiFactorLookupManager.getMFARequired(registeredService, principal);
+            LOGGER.debug("Multi-factor required by service.  {}", serviceMFARequired);
         }
 
         // If the service requires MFA, it's required for all
@@ -95,8 +99,9 @@ public class DetermineIfTwoFactorAction extends AbstractAction {
             LOGGER.debug("Multi-factor required by user.  {} result is {}", principalId, this.MFA_NEEDED);
             return result(this.MFA_NEEDED);
         }
-
-        LOGGER.debug("Multi-factor not required by service or user.  {} result is {}", principalId, this.NO_MFA_NEEDED);
+	
+	
+        LOGGER.debug("Multi-factor not required by service {} or user.  {} result is {}", service, principalId, this.NO_MFA_NEEDED);
         return result(this.NO_MFA_NEEDED);
     }
 
