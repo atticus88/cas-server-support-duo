@@ -5,7 +5,7 @@ import com.duosecurity.*
 import edu.ucr.cnc.cas.support.duo.DuoConfiguration
 import org.jasig.cas.authentication.principal.Principal
 import org.jasig.cas.authentication.Authentication
-import edu.usf.cims.cas.support.duo.authentication.principal.DuoCredential
+import edu.usf.cims.cas.support.duo.authentication.principal.DuoCredentials
 import org.jasig.cas.authentication.UsernamePasswordCredential
 import edu.usf.cims.cas.support.duo.authentication.handler.DuoAuthenticationHandler
 import edu.usf.cims.cas.support.duo.authentication.principal.DuoCredentialsToPrincipalResolver
@@ -34,7 +34,7 @@ class DuoAuthenticationHandlerTests extends Specification {
       def credentials = new UsernamePasswordCredential()
       credentials.username = USER
       
-      def duoCredentials = new DuoCredential()
+      def duoCredentials = new DuoCredentials()
       duoCredentials.setFirstAuthentication(authentication)
 
       def request_sig = DuoWeb.signRequest(IKEY, SKEY, AKEY, USER)
@@ -62,7 +62,7 @@ class DuoAuthenticationHandlerTests extends Specification {
       def credentials = new UsernamePasswordCredential()
       credentials.username = USER
       
-      def duoCredentials = new DuoCredential()
+      def duoCredentials = new DuoCredentials()
       duoCredentials.setFirstAuthentication(authentication)
 
       def request_sig = DuoWeb.signRequest(IKEY, SKEY, AKEY, USER)
@@ -90,7 +90,7 @@ class DuoAuthenticationHandlerTests extends Specification {
       def credentials = new UsernamePasswordCredential()
       credentials.username = USER
       
-      def duoCredentials = new DuoCredential()
+      def duoCredentials = new DuoCredentials()
       duoCredentials.setFirstAuthentication(authentication)
 
       def request_sig = DuoWeb.signRequest(IKEY, SKEY, AKEY, USER)
@@ -112,7 +112,7 @@ class DuoAuthenticationHandlerTests extends Specification {
 
   def "Support DuoCredential"(){
     given:
-      def duoCredentials = new DuoCredential()
+      def duoCredentials = new DuoCredentials()
       def ah = new DuoAuthenticationHandler()
 
     when:

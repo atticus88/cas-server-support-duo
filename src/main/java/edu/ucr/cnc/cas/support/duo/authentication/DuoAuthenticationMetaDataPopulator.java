@@ -39,18 +39,14 @@ public class DuoAuthenticationMetaDataPopulator implements AuthenticationMetaDat
 
         // Only do anything if the credentials being passed is of type DuoCredentials
         if (credentials instanceof DuoCredentials) {
-            Principal simplePrincipal = new SimplePrincipal(authentication.getPrincipal().getId(), authentication.getPrincipal().getAttributes());
-            MutableAuthentication mutableAuthentication = new MutableAuthentication(simplePrincipal, authentication.getAuthenticationDate());
+           // Principal simplePrincipal = new SimplePrincipal(authentication.getPrincipal().getId(), authentication.getPrincipal().getAttributes());
+           // MutableAuthentication mutableAuthentication = new MutableAuthentication(simplePrincipal, authentication.getAuthenticationDate());
 
             // Add the LOA_TF attribute to the Authentication object
             //.getAttributes().putAll(authentication.getAttributes());
             authentication.getAttributes().put(CasConstants.LOA_ATTRIBUTE, CasConstants.LOA_TF);
 
-            LOGGER.debug("adding LOA of {} to Authentication object for {}", CasConstants.LOA_TF, simplePrincipal.getId());
-
-            //return mutableAuthentication;
+            LOGGER.debug("adding LOA of {} to Authentication object.", CasConstants.LOA_TF);
         }
-
-        //return authentication;
     }
 }

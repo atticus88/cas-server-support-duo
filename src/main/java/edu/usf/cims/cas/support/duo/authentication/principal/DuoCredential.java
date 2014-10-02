@@ -8,7 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import edu.usf.cims.cas.support.duo.authentication.principal.DuoCredentials;
+//import edu.usf.cims.cas.support.duo.authentication.principal.DuoCredentials;
 import org.jasig.cas.authentication.Credential;
 import org.jasig.cas.authentication.Authentication;
 import org.jasig.cas.authentication.UsernamePasswordCredential;

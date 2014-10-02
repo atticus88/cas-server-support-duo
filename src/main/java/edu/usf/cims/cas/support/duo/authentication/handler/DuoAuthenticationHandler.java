@@ -8,7 +8,7 @@ import org.jasig.cas.authentication.AuthenticationHandler;
 import org.jasig.cas.authentication.handler.UncategorizedAuthenticationException;
 import org.jasig.cas.authentication.principal.Principal;
 import org.jasig.cas.authentication.Credential;
-import edu.usf.cims.cas.support.duo.authentication.principal.DuoCredential;
+import edu.usf.cims.cas.support.duo.authentication.principal.DuoCredentials;
 import org.jasig.cas.ticket.TicketGrantingTicket;
 import org.jasig.cas.ticket.registry.TicketRegistry;
 import org.jasig.cas.authentication.BasicCredentialMetaData;
@@ -43,7 +43,7 @@ public final class DuoAuthenticationHandler implements AuthenticationHandler {
 
     @Override
     public HandlerResult authenticate(final Credential credential) throws GeneralSecurityException {
-        final DuoCredential c = (DuoCredential) credential;
+        final DuoCredentials c = (DuoCredentials) credential;
 
 	String duoVerifyResponse = DuoWeb.verifyResponse(this.duoConfiguration.getIntegrationKey(), this.duoConfiguration.getSecretKey(), this.duoConfiguration.getApplicationKey(), c.getSignedDuoResponse());
 	
@@ -63,7 +63,7 @@ public final class DuoAuthenticationHandler implements AuthenticationHandler {
 
     @Override
     public boolean supports(final Credential credential) {
-        return credential instanceof DuoCredential;
+        return credential instanceof DuoCredentials;
     }
 
     @Override
