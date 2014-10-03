@@ -92,35 +92,32 @@ There are two new files in `WEB-INF/spring-configuration` that need to be config
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd">
 
-    <bean id="serviceLookupManager"
-        class="edu.weber.cas.duo.services.RegisteredServiceMultiFactorLookupManager">
-        <property name="mfaRequiredKey" value="casMFARequired"/>
-        <property name="mfaRequiredAttributesKey" value="casMFAUserAttributes"/>
-    </bean>
+	<bean id="serviceLookupManager" class="edu.weber.cas.duo.services.RegisteredServiceMultiFactorLookupManager">
+        	<property name="mfaRequiredKey" value="casMFARequired"/>
+        	<property name="mfaRequiredAttributesKey" value="casMFAUserAttributes"/>
+    	</bean>
 
-    <bean id="userLookupManager"
-        class="edu.weber.cas.duo.authentication.principal.AttributeUserMultiFactorLookupManager">
-        <property name="mfaRequiredKey" value="RequireTwoFactorForAllServices"/>
-        <property name="mfaRequiredValue" value="YES"/>
-    </bean>
+    	<bean id="userLookupManager" class="edu.weber.cas.duo.authentication.principal.AttributeUserMultiFactorLookupManager">
+        	<property name="mfaRequiredKey" value="RequireTwoFactorForAllServices"/>
+        	<property name="mfaRequiredValue" value="YES"/>
+    	</bean>
 
-    <bean id="determineIfTwoFactorAction" class="edu.weber.cas.duo.web.flow.DetermineIfTwoFactorAction">
-        <property name="ticketRegistry" ref="ticketRegistry"/>
-        <property name="servicesManager" ref="servicesManager"/>
-        <property name="serviceMultiFactorLookupManager" ref="serviceLookupManager"/>
-        <property name="userMultiFactorLookupManager" ref="userLookupManager"/>
-    </bean>
+    	<bean id="determineIfTwoFactorAction" class="edu.weber.cas.duo.web.flow.DetermineIfTwoFactorAction">
+        	<property name="ticketRegistry" ref="ticketRegistry"/>
+        	<property name="servicesManager" ref="servicesManager"/>
+        	<property name="serviceMultiFactorLookupManager" ref="serviceLookupManager"/>
+        	<property name="userMultiFactorLookupManager" ref="userLookupManager"/>
+    	</bean>
 
-    <bean id="checkLoaOfTicketGrantingTicket" class="edu.weber.cas.duo.web.flow.CheckLoaOfTicketGrantingTicket">
-        <property name="serviceMultiFactorLookupManager" ref="serviceLookupManager"/>
-        <property name="servicesManager" ref="servicesManager"/>
-        <property name="ticketRegistry" ref="ticketRegistry"/>
-    </bean>
+    	<bean id="checkLoaOfTicketGrantingTicket" class="edu.weber.cas.duo.web.flow.CheckLoaOfTicketGrantingTicket">
+        	<property name="serviceMultiFactorLookupManager" ref="serviceLookupManager"/>
+        	<property name="servicesManager" ref="servicesManager"/>
+        	<property name="ticketRegistry" ref="ticketRegistry"/>
+    	</bean>
 
-    <bean id="generateDuoCredentials" class="edu.weber.cas.duo.web.flow.GenerateDuoCredentialsAction">
-        <property name="ticketRegistry" ref="ticketRegistry"/>
-    </bean>
-
+    	<bean id="generateDuoCredentials" class="edu.weber.cas.duo.web.flow.GenerateDuoCredentialsAction">
+        	<property name="ticketRegistry" ref="ticketRegistry"/>
+    	</bean>
 </beans>
 ```
 
@@ -204,16 +201,16 @@ This file in `WEB-INF/spring-configuration` configures the use of the DuoWeb Jav
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd">
 
-    <bean id="duoConfiguration" class="edu.weber.cas.duo.config.DuoConfiguration">
-        <constructor-arg index="0" value="${duo.apiHost}"/>
-        <constructor-arg index="1" value="${duo.integrationKey}"/>
-        <constructor-arg index="2" value="${duo.secretKey}"/>
-        <constructor-arg index="3" value="${duo.applicationKey}"/>
-    </bean>
+	<bean id="duoConfiguration" class="edu.weber.cas.duo.config.DuoConfiguration">
+        	<constructor-arg index="0" value="${duo.apiHost}"/>
+        	<constructor-arg index="1" value="${duo.integrationKey}"/>
+        	<constructor-arg index="2" value="${duo.secretKey}"/>
+        	<constructor-arg index="3" value="${duo.applicationKey}"/>
+    	</bean>
 
-    <bean id="duoUtils" class="edu.weber.cas.duo.util.DuoUtils">
-        <property name="duoConfiguration" ref="duoConfiguration"/>
-    </bean>
+    	<bean id="duoUtils" class="edu.weber.cas.duo.util.DuoUtils">
+        	<property name="duoConfiguration" ref="duoConfiguration"/>
+    	</bean>
 </beans>
 ```
 
