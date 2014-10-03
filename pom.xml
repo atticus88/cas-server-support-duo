@@ -1,8 +1,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <name>Jasig Central Authentication Service DuoSecurity Two-Factor Authentication</name>
-  <groupId>edu.usf.cims</groupId>
-  <artifactId>cas-server-extension-duo</artifactId>
-  <version>0.2.0</version>
+  <groupId>edu.weber.cas</groupId>
+  <artifactId>cas-server-support-duo</artifactId>
+  <version>0.4.0</version>
   <packaging>jar</packaging>
   <modelVersion>4.0.0</modelVersion>
   <inceptionYear>2013</inceptionYear>
@@ -14,18 +14,29 @@
     </license>
   </licenses>
   <scm>
-    <connection>scm:git:git@github.com:epierce/cas-server-extension-duo.git</connection>
-    <developerConnection>scm:git:git@github.com:epierce/cas-server-extension-duo.git</developerConnection>
-    <url>https://github.com/epierce/cas-server-extension-duo</url>
+    <connection>scm:git:git@github.com:atticus88/cas-server-extension-duo.git</connection>
+    <developerConnection>scm:git:git@github.com:atticus88/cas-server-extension-duo.git</developerConnection>
+    <url>https://github.com/atticus88/cas-server-extension-duo</url>
     <tag>master</tag>
   </scm>
 
   <issueManagement>
-    <url>https://github.com/epierce/cas-server-extension-duo/issues</url>
+    <url>https://github.com/atticus88/cas-server-extension-duo/issues</url>
     <system>Github</system>
   </issueManagement>
 
   <developers>
+  <developer>
+      <id>atticus88</id>
+      <name>Klint Holmes</name>
+      <email>klintholmes@weber.edu</email>
+      <organization>Weber State University</organization>
+      <organizationUrl>http://www.weber.edu</organizationUrl>
+      <roles>
+          <role>Developer</role>
+      </roles>
+    </developer>
+
     <developer>
       <id>epierce</id>
       <name>Eric Pierce</name>
