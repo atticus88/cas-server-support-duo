@@ -55,7 +55,7 @@ In order to determine if the user's current authentication is sufficient to acce
 
 You'll also need to add `DuoCredentialsToPrincipalResolver` to the list of principal resolvers:
 
-```
+```xml
 <bean id="authenticationManager" class="org.jasig.cas.authentication.PolicyBasedAuthenticationManager">
   <constructor-arg>
 		<list>
