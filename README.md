@@ -1,7 +1,7 @@
 cas-server-extension-duo
 ========================
 
-This module is based on https://github.com/highlnd/cas-overlay-duo  The goal is to extract the code/configuration required to use Duo for two-factor authentication and package it into a module that can be easily included in a CAS deployment.
+This module is based on https://github.com/highlnd/cas-overlay-duo and https://github.com/epierce/cas-server-extension-duo. The goal is to extract the code/configuration required to use Duo for two-factor authentication and package it into a module that can be easily included in a CAS 4.0 deployment. 
 
 [DuoSecurity](https://www.duosecurity.com/) provides a hosted service for two-factor authentication using mobile devices, landline phones and hardware tokens.  They provide clients for various applications (VPN, SSH, etc) but an integration for CAS wasn't available.  [Mike Kennedy](https://github.com/highlnd) developed the integration using the [Java DuoWeb Client](https://github.com/duosecurity/duo_java).
 
@@ -48,39 +48,34 @@ Add the following block to the `pom.xml` in your CAS overlay
 ### Configure Authentication
 First, add the `DuoAuthenticationHandler` bean to the list of authentication handlers in `deployerConfigContext.xml`:
 
-```
-<property name="authenticationHandlers">
-  <list>
-   ___other AuthenticationHandlers___
-    <bean class="edu.usf.cims.cas.support.duo.authentication.handler.DuoAuthenticationHandler"
-      p:duoConfiguration-ref="duoConfiguration" />
-  </list>
- </property>
-```
+### Configure Authentication Metadata Population
+In order to determine if the user's current authentication is sufficient to access a new service (has he logged in with duo or not), we need to add some information onto the user's `Authentication` object.
 
 * **duoConfiguration-ref**: A reference to the bean that hold the configuration information for Duo (you'll create this later).
 
 You'll also need to add `DuoCredentialsToPrincipalResolver` to the list of principal resolvers:
 
 ```
-<property name="credentialsToPrincipalResolvers">
-  <list>
-  ___other credentialToPrincipalResolvers___
-    <bean class="edu.usf.cims.cas.support.duo.authentication.principal.DuoCredentialsToPrincipalResolver" />
-  </list>
-</property>
-```
+<bean id="authenticationManager" class="org.jasig.cas.authentication.PolicyBasedAuthenticationManager">
+  <constructor-arg>
+		<list>
+		  <ref bean="ldapAuthenticationHandler" />
+			<ref bean="duoAuthenticationHandler" />
+		</list>
+  </constructor-arg>
+  <property name="authenticationMetaDataPopulators">
+    <list>
+      <bean class="edu.ucr.cnc.cas.support.duo.authentication.UsernamePasswordAuthenticationMetaDataPopulator"/>
+      <bean class="edu.ucr.cnc.cas.support.duo.authentication.DuoAuthenticationMetaDataPopulator"/>
+    </list>
+  </property>
+  <property name="authenticationPolicy">
+    <bean class="org.jasig.cas.authentication.AnyAuthenticationPolicy" p:tryAll="true"/>
+  </property>
+</bean>
 
-### Configure Authentication Metadata Population
-In order to determine if the user's current authentication is sufficient to access a new service (has he logged in with duo or not), we need to add some information onto the user's `Authentication` object.
-
-```
-    <property name="authenticationMetaDataPopulators">
-      <list>
-        <bean class="edu.ucr.cnc.cas.support.duo.authentication.UsernamePasswordAuthenticationMetaDataPopulator"/>
-        <bean class="edu.ucr.cnc.cas.support.duo.authentication.DuoAuthenticationMetaDataPopulator"/>
-      </list>
-    </property>
+<bean id="duoAuthenticationHandler" class="edu.usf.cims.cas.support.duo.authentication.handler.DuoAuthenticationHandler" p:duoConfiguration-ref="duoConfiguration" />
+<bean id="duoCredentialsToPrincipalResolver" class="edu.usf.cims.cas.support.duo.authentication.principal.DuoCredentialsToPrincipalResolver" />
 ```
 ___
 
@@ -99,8 +94,8 @@ There are two new files in `WEB-INF/spring-configuration` that need to be config
 
     <bean id="serviceLookupManager"
         class="edu.usf.cims.cas.support.duo.services.RegisteredServiceMultiFactorLookupManager">
-        <property name="mfaRequiredKey" value="RequireTwoFactor"/>
-        <property name="mfaRequiredAttributesKey" value="TwoFactorAttributes"/>
+        <property name="mfaRequiredKey" value="casMFARequired"/>
+        <property name="mfaRequiredAttributesKey" value="casMFAUserAttributes"/>
     </bean>
 
     <bean id="userLookupManager"
@@ -274,38 +269,67 @@ The final step is to modify the login webflow to include the checks for TwoFacto
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Licensed to Jasig under one or more contributor license
+    agreements. See the NOTICE file distributed with this work
+    for additional information regarding copyright ownership.
+    Jasig licenses this file to you under the Apache License,
+    Version 2.0 (the "License"); you may not use this file
+    except in compliance with the License.  You may obtain a
+    copy of the License at the following location:
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+
+-->
 <flow xmlns="http://www.springframework.org/schema/webflow"
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://www.springframework.org/schema/webflow
                           http://www.springframework.org/schema/webflow/spring-webflow-2.0.xsd">
 
-    <var name="credentials" class="org.jasig.cas.authentication.principal.UsernamePasswordCredentials" />
+    <var name="credential" class="org.jasig.cas.authentication.UsernamePasswordCredential" />
+    <!--<var name="duoCredentials" class="edu.usf.cims.cas.support.duo.authentication.principal.DuoCredentials" />-->
     <on-start>
         <evaluate expression="initialFlowSetupAction" />
     </on-start>
 
-  <decision-state id="ticketGrantingTicketExistsCheck">
-    <if test="flowScope.ticketGrantingTicketId != null" then="hasServiceCheck" else="gatewayRequestCheck" />
-  </decision-state>
+	<action-state id="ticketGrantingTicketCheck">
+        <evaluate expression="ticketGrantingTicketCheckAction.checkValidity(flowRequestContext)"/>
+        <transition on="notExists" to="gatewayRequestCheck"/>
+        <transition on="invalid" to="terminateSession"/>
+        <transition on="valid" to="hasServiceCheck"/>
+	</action-state>
 
-  <decision-state id="gatewayRequestCheck">
-    <if test="requestParameters.gateway != '' and requestParameters.gateway != null and flowScope.service != null" then="gatewayServicesManagementCheck" else="serviceAuthorizationCheck" />
-  </decision-state>
-
-  <decision-state id="hasServiceCheck">
-    <if test="flowScope.service != null" then="renewRequestCheck" else="viewGenericLoginSuccess" />
-  </decision-state>
-
-<!-- changed for duo support
-  <decision-state id="renewRequestCheck">
-    <if test="requestParameters.renew != '' and requestParameters.renew != null" then="generateLoginTicket" else="generateServiceTicket" />
-  </decision-state>
+    <action-state id="terminateSession">
+        <evaluate expression="terminateSessionAction.terminate(flowRequestContext)"/>
+        <transition to="generateLoginTicket"/>
+    </action-state>
+    
+	<decision-state id="gatewayRequestCheck">
+		<if test="requestParameters.gateway != '' and requestParameters.gateway != null and flowScope.service != null" then="gatewayServicesManagementCheck" else="serviceAuthorizationCheck" />
+	</decision-state>
+	
+	<decision-state id="hasServiceCheck">
+		<if test="flowScope.service != null" then="renewRequestCheck" else="viewGenericLoginSuccess" />
+	</decision-state>
+	
+<!--	<decision-state id="renewRequestCheck">
+		<if test="requestParameters.renew != '' and requestParameters.renew != null" then="serviceAuthorizationCheck" else="generateServiceTicket" />
+	</decision-state>
 -->
-  <decision-state id="renewRequestCheck">
-    <if test="requestParameters.renew != '' and requestParameters.renew != null" then="generateLoginTicket" else="checkLoaOfTGT" />
-  </decision-state>
+ 	
+   <decision-state id="renewRequestCheck">
+         <if test="requestParameters.renew != '' and requestParameters.renew != null" then="generateLoginTicket" else="checkLoaOfTGT" />
+   </decision-state>
 
-<!-- added for Duo Support -->
+    <!-- added for Duo Support -->
   <action-state id="checkLoaOfTGT">
     <evaluate expression="checkLoaOfTicketGrantingTicket"/>
     <transition on="continue" to="generateServiceTicket"/>
@@ -317,105 +341,59 @@ The final step is to modify the login webflow to include the checks for TwoFacto
         <evaluate expression="serviceAuthorizationCheck"/>
         <transition to="generateLoginTicket"/>
     </action-state>
-<!-- -->
+	
+	<!-- 
+		The "warn" action makes the determination of whether to redirect directly to the requested
+		service or display the "confirmation" page to go back to the server.
+	-->
+	<decision-state id="warn">
+		<if test="flowScope.warnCookieValue" then="showWarningView" else="redirect" />
+	</decision-state>
+	
+	<!-- 
+	<action-state id="startAuthenticate">
+		<action bean="x509Check" />
+		<transition on="success" to="sendTicketGrantingTicket" />
+		<transition on="warn" to="warn" />
+		<transition on="error" to="generateLoginTicket" />
+	</action-state>
+	 -->
 
-  <!--
-    The "warn" action makes the determination of whether to redirect directly to the requested
-    service or display the "confirmation" page to go back to the server.
-  -->
-  <decision-state id="warn">
-    <if test="flowScope.warnCookieValue" then="showWarningView" else="redirect" />
-  </decision-state>
-
-  <!--
-  <action-state id="startAuthenticate">
-    <action bean="x509Check" />
-    <transition on="success" to="sendTicketGrantingTicket" />
-    <transition on="warn" to="warn" />
-    <transition on="error" to="generateLoginTicket" />
-  </action-state>
-   -->
-
-    <!--
-      LPPE transitions begin here: You will also need to
-      move over the 'lppe-configuration.xml' file from the
-      'unused-spring-configuration' folder to the 'spring-configuration' folder
-      so CAS can pick up the definition for the bean 'passwordPolicyAction'.
-    -->
-
-  <action-state id="passwordPolicyCheck">
-    <evaluate expression="passwordPolicyAction" />
-    <transition on="showWarning" to="passwordServiceCheck" />
-    <transition on="success" to="sendTicketGrantingTicket" />
-    <transition on="error" to="viewLoginForm" />
-  </action-state>
-
-  <action-state id="passwordServiceCheck">
-    <evaluate expression="sendTicketGrantingTicketAction" />
-    <transition to="passwordPostCheck" />
-  </action-state>
-
-  <decision-state id="passwordPostCheck">
-    <if test="flowScope.service != null" then="warnPassRedirect" else="pwdWarningPostView" />
-  </decision-state>
-
-  <action-state id="warnPassRedirect">
-    <evaluate expression="generateServiceTicketAction" />
-    <transition on="success" to="pwdWarningPostView" />
-    <transition on="error" to="generateLoginTicket" />
-    <transition on="gateway" to="gatewayServicesManagementCheck" />
-  </action-state>
-
-  <end-state id="pwdWarningAbstractView">
-    <on-entry>
-      <set name="flowScope.passwordPolicyUrl" value="passwordPolicyAction.getPasswordPolicyUrl()" />
-    </on-entry>
-  </end-state>
-  <end-state id="pwdWarningPostView" view="casWarnPassView" parent="#pwdWarningAbstractView" />
-  <end-state id="casExpiredPassView" view="casExpiredPassView" parent="#pwdWarningAbstractView" />
-  <end-state id="casMustChangePassView" view="casMustChangePassView" parent="#pwdWarningAbstractView" />
-  <end-state id="casAccountDisabledView" view="casAccountDisabledView" />
-  <end-state id="casAccountLockedView" view="casAccountLockedView" />
-  <end-state id="casBadHoursView" view="casBadHoursView" />
-  <end-state id="casBadWorkstationView" view="casBadWorkstationView" />
-  <!-- LPPE transitions end here... -->
-
-  <action-state id="generateLoginTicket">
+	<action-state id="generateLoginTicket">
         <evaluate expression="generateLoginTicketAction.generate(flowRequestContext)" />
-    <transition on="generated" to="viewLoginForm" />
-  </action-state>
-
-  <view-state id="viewLoginForm" view="casLoginView" model="credentials">
+		<transition on="generated" to="viewLoginForm" />
+	</action-state>
+    
+	<view-state id="viewLoginForm" view="casLoginView" model="credential">
         <binder>
             <binding property="username" />
             <binding property="password" />
         </binder>
         <on-entry>
-            <set name="viewScope.commandName" value="'credentials'" />
+            <set name="viewScope.commandName" value="'credential'" />
         </on-entry>
-    <transition on="submit" bind="true" validate="true" to="realSubmit">
-            <evaluate expression="authenticationViaFormAction.doBind(flowRequestContext, flowScope.credentials)" />
+		<transition on="submit" bind="true" validate="true" to="realSubmit">
+            <evaluate expression="authenticationViaFormAction.doBind(flowRequestContext, flowScope.credential)" />
         </transition>
-  </view-state>
+	</view-state>
 
-    <action-state id="realSubmit">
-        <evaluate expression="authenticationViaFormAction.submit(flowRequestContext, flowScope.credentials, messageContext)" />
-      <transition on="warn" to="determineIfTwoFactor" /> <!-- Changed for Duo Support -->
-      <transition on="success" to="determineIfTwoFactor" /> <!-- Changed for Duo Support -->
-      <transition on="error" to="generateLoginTicket" />
-      <transition on="accountDisabled" to="casAccountDisabledView" />
-      <transition on="mustChangePassword" to="casMustChangePassView" />
-      <transition on="accountLocked" to="casAccountLockedView" />
-      <transition on="badHours" to="casBadHoursView" />
-      <transition on="badWorkstation" to="casBadWorkstationView" />
-      <transition on="passwordExpired" to="casExpiredPassView" />
+  <action-state id="realSubmit">
+    <evaluate expression="authenticationViaFormAction.submit(flowRequestContext, flowScope.credential, messageContext)" />
+    <!--<transition on="warn" to="warn" />-->
+    <transition on="warn" to="determineIfTwoFactor" />
+    <!--<transition on="success" to="sendTicketGrantingTicket" />-->
+    <transition on="success" to="determineIfTwoFactor" />	
+    <transition on="successWithWarnings" to="determinIfTwoFactor" />
+    <transition on="authenticationFailure" to="handleAuthenticationFailure" />
+    <transition on="error" to="generateLoginTicket" />
   </action-state>
+
 
 <!-- Added for Duo support -->
   <action-state id="determineIfTwoFactor">
     <evaluate expression="determineIfTwoFactorAction" />
     <transition on="multiFactorNeeded" to="startDuoSecondFactorFlow" />
-    <transition on="noMultiFactorNeeded" to="passwordPolicyCheck" />
+    <transition on="noMultiFactorNeeded" to="sendTicketGrantingTicket" />
     <transition on="error" to="generateLoginTicket" />
   </action-state>
 
@@ -427,56 +405,67 @@ The final step is to modify the login webflow to include the checks for TwoFacto
   <action-state id="generateDuoCredentials">
     <evaluate expression="generateDuoCredentials.createDuoCredentials(flowRequestContext)" />
       <transition on="created" to="viewLoginFormTF" />
-      <transition on="error" to="generateLoginTicket" />
+      <transition on="error" to="warn" />
   </action-state>
 
-  <view-state id="viewLoginFormTF" view="casDuoLoginView" model="duoCredentials">
+
+    <view-state id="viewLoginFormTF" view="casDuoLoginView" model="duoCredentials">
     <binder>
       <binding property="signedDuoResponse" />
     </binder>
     <on-entry>
-      <evaluate expression="duoUtils.generateSignedRequest(flowScope.duoCredentials.getPrincipal().getId())" result="viewScope.sigRequest"/>
+     <evaluate expression="duoUtils.generateSignedRequest(flowScope.duoCredentials.getId())" result="viewScope.sigRequest"/>
       <set name="viewScope.apiHost" value="duoConfiguration.getApiHost()" />
       <set name="viewScope.commandName" value="'duoCredentials'" />
     </on-entry>
     <transition on="submit" bind="true" validate="true" to="realSubmitTF">
-      <evaluate expression="authenticationViaFormAction.doBind(flowRequestContext, flowScope.duoCredentials)" />
+     <evaluate expression="authenticationViaFormAction.doBind(flowRequestContext, flowScope.duoCredentials)" />
     </transition>
   </view-state>
 
-  <action-state id="realSubmitTF">
+<action-state id="realSubmitTF">
     <evaluate expression="authenticationViaFormAction.submit(flowRequestContext, flowScope.duoCredentials, messageContext)" />
-    <!--
-    To enable LPPE on the 'warn' replace the below transition with:
-    <transition on="warn" to="passwordPolicyCheck" />
-
-    CAS will attempt to transition to the 'warn' when there's a 'renew' parameter
-    and there exists a ticketGrantingId and a service for the incoming request.
-    <transition on="warn" to="warn" />
-      To enable LPPE on the 'success' replace the below transition with:
-      <transition on="success" to="passwordPolicyCheck" />
-    -->
     <transition on="warn" to="warn" />
     <transition on="success" to="sendTicketGrantingTicket" />
     <transition on="error" to="viewLoginForm" />
   </action-state>
-<!-- END DUO SECOND FACTOR FLOW -->
 
-  <action-state id="sendTicketGrantingTicket">
-        <evaluate expression="sendTicketGrantingTicketAction" />
-    <transition to="serviceCheck" />
+  <view-state id="showMessages" view="casLoginMessageView">
+    <on-entry>
+      <evaluate expression="sendTicketGrantingTicketAction" />
+      <set name="requestScope.messages" value="messageContext.allMessages" />
+    </on-entry>
+    <transition on="proceed" to="serviceCheck" />
+  </view-state>
+
+  <action-state id="handleAuthenticationFailure">
+    <evaluate expression="authenticationExceptionHandler.handle(currentEvent.attributes.error, messageContext)" />
+    <transition on="AccountDisabledException" to="casAccountDisabledView"/>
+    <transition on="AccountLockedException" to="casAccountLockedView"/>
+    <transition on="CredentialExpiredException" to="casExpiredPassView"/>
+    <transition on="InvalidLoginLocationException" to="casBadWorkstationView"/>
+    <transition on="InvalidLoginTimeException" to="casBadHoursView"/>
+    <transition on="FailedLoginException" to="generateLoginTicket"/>
+    <transition on="AccountNotFoundException" to="generateLoginTicket"/>
+    <transition on="UNKNOWN" to="generateLoginTicket"/>
   </action-state>
 
-  <decision-state id="serviceCheck">
-    <if test="flowScope.service != null" then="generateServiceTicket" else="viewGenericLoginSuccess" />
-  </decision-state>
+	<action-state id="sendTicketGrantingTicket">
+    <evaluate expression="sendTicketGrantingTicketAction" />
+		<transition to="serviceCheck" />
+	</action-state>
 
-  <action-state id="generateServiceTicket">
+	<decision-state id="serviceCheck">
+		<if test="flowScope.service != null" then="generateServiceTicket" else="viewGenericLoginSuccess" />
+	</decision-state>
+	
+	<action-state id="generateServiceTicket">
         <evaluate expression="generateServiceTicketAction" />
-    <transition on="success" to ="warn" />
+		<transition on="success" to ="warn" />
+    <transition on="authenticationFailure" to="handleAuthenticationFailure" />
     <transition on="error" to="generateLoginTicket" />
-    <transition on="gateway" to="gatewayServicesManagementCheck" />
-  </action-state>
+		<transition on="gateway" to="gatewayServicesManagementCheck" />
+	</action-state>
 
     <action-state id="gatewayServicesManagementCheck">
         <evaluate expression="gatewayServicesManagementCheck" />
@@ -492,17 +481,32 @@ The final step is to modify the login webflow to include the checks for TwoFacto
         <if test="requestScope.response.responseType.name() == 'POST'" then="postView" else="redirectView" />
     </decision-state>
 
-  <!--
-    the "viewGenericLogin" is the end state for when a user attempts to login without coming directly from a service.
-    They have only initialized their single-sign on session.
-  -->
-  <end-state id="viewGenericLoginSuccess" view="casLoginGenericSuccessView" />
+	<!-- 
+		the "viewGenericLogin" is the end state for when a user attempts to login without coming directly from a service.
+		They have only initialized their single-sign on session.
+	-->
+	<end-state id="viewGenericLoginSuccess" view="casLoginGenericSuccessView" />
 
-  <!--
-    The "showWarningView" end state is the end state for when the user has requested privacy settings (to be "warned") to be turned on.  It delegates to a
-    view defines in default_views.properties that display the "Please click here to go to the service." message.
-  -->
-  <end-state id="showWarningView" view="casLoginConfirmView" />
+
+	<!-- 
+		The "showWarningView" end state is the end state for when the user has requested privacy settings (to be "warned") to be turned on.  It delegates to a 
+		view defines in default_views.properties that display the "Please click here to go to the service." message.
+	-->
+	<end-state id="showWarningView" view="casLoginConfirmView" />
+
+
+  <!-- Password policy failure states -->
+  <end-state id="abstactPasswordChangeView">
+    <on-entry>
+      <set name="flowScope.passwordPolicyUrl" value="passwordPolicy.passwordPolicyUrl" />
+    </on-entry>
+  </end-state>
+  <end-state id="casExpiredPassView" view="casExpiredPassView" parent="#abstactPasswordChangeView" />
+  <end-state id="casMustChangePassView" view="casMustChangePassView" parent="#abstactPasswordChangeView" />
+  <end-state id="casAccountDisabledView" view="casAccountDisabledView" />
+  <end-state id="casAccountLockedView" view="casAccountLockedView" />
+  <end-state id="casBadHoursView" view="casBadHoursView" />
+  <end-state id="casBadWorkstationView" view="casBadWorkstationView" />
 
     <end-state id="postView" view="postResponseView">
         <on-entry>
@@ -511,21 +515,24 @@ The final step is to modify the login webflow to include the checks for TwoFacto
         </on-entry>
     </end-state>
 
-  <!--
-    The "redirect" end state allows CAS to properly end the workflow while still redirecting
-    the user back to the service required.
-  -->
-  <end-state id="redirectView" view="externalRedirect:${requestScope.response.url}" />
-
-  <end-state id="viewServiceErrorView" view="viewServiceErrorView" />
-
+	<!-- 
+		The "redirect" end state allows CAS to properly end the workflow while still redirecting
+		the user back to the service required.
+	-->
+	<end-state id="redirectView" view="externalRedirect:#{requestScope.response.url}" />
+	
+	<end-state id="viewServiceErrorView" view="viewServiceErrorView" />
+    
     <end-state id="viewServiceSsoErrorView" view="viewServiceSsoErrorView" />
 
   <global-transitions>
-        <!-- CAS-1023 This one is simple - redirects to a login page (same as renew) when 'ssoEnabled' flag is unchecked
-             instead of showing an intermediate unauthorized view with a link to login page -->
-        <transition to="viewLoginForm" on-exception="org.jasig.cas.services.UnauthorizedSsoServiceException"/>
-        <transition to="viewServiceErrorView" on-exception="org.springframework.webflow.execution.repository.NoSuchFlowExecutionException" />
+    <!--
+      CAS-1023 This one is simple - redirects to a login page (same as renew) when 'ssoEnabled' flag is unchecked
+      instead of showing an intermediate unauthorized view with a link to login page
+    -->
+    <transition to="viewLoginForm" on-exception="org.jasig.cas.services.UnauthorizedSsoServiceException"/>
+
+    <transition to="viewServiceErrorView" on-exception="org.springframework.webflow.execution.repository.NoSuchFlowExecutionException" />
     <transition to="viewServiceErrorView" on-exception="org.jasig.cas.services.UnauthorizedServiceException" />
   </global-transitions>
 </flow>
