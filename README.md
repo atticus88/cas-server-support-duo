@@ -1,4 +1,4 @@
-cas-server-extension-duo
+cas-server-extension-duo (CAS 4.0)
 ========================
 
 This module is based on https://github.com/highlnd/cas-overlay-duo and https://github.com/epierce/cas-server-extension-duo. The goal is to extract the code/configuration required to use Duo for two-factor authentication and package it into a module that can be easily included in a CAS 4.0 deployment. 
