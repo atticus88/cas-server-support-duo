@@ -1,7 +1,7 @@
-cas-server-extension-duo (CAS 4.0)
+cas-server-support-duo (Jasig CAS 4.0.0)
 ========================
 
-This module is based on https://github.com/highlnd/cas-overlay-duo and https://github.com/epierce/cas-server-extension-duo. The goal is to extract the code/configuration required to use Duo for two-factor authentication and package it into a module that can be easily included in a CAS 4.0 deployment. 
+This module is based on https://github.com/highlnd/cas-overlay-duo and https://github.com/epierce/cas-server-extension-duo. The goal is to extract the code/configuration required to use Duo for two-factor authentication and package it into a module that can be easily included in a CAS 4.0.0 deployment. 
 
 [DuoSecurity](https://www.duosecurity.com/) provides a hosted service for two-factor authentication using mobile devices, landline phones and hardware tokens.  They provide clients for various applications (VPN, SSH, etc) but an integration for CAS wasn't available.  [Mike Kennedy](https://github.com/highlnd) developed the integration using the [Java DuoWeb Client](https://github.com/duosecurity/duo_java).
 
@@ -21,7 +21,7 @@ The wiki article on how to configure it is [here](https://wiki.jasig.org/display
 ### Use the JSON Service Registry
 You'll need to include the [Unicon cas-addons module](https://github.com/Unicon/cas-addons/tree/v1.10) in your Maven overlay.  In particular, you must use the [JSON Service Registry](https://github.com/Unicon/cas-addons/wiki/Configuring%20JSON%20Service%20Registry) to add Duo authentication.  The `extraAttributes` stored with each service are used to determine which services and users require two-factor authentication.
 
-I'll also take a minute to plug one of my other projects: [cas-json-tool](https://github.com/epierce/cas-json-tool)  It's a command-line program for managing the JSON file and includes options for creating and maintaining the service attributes necessary to use Duo authentication.
+I'll also take a minute to plug one of epierce's projects: [cas-json-tool](https://github.com/epierce/cas-json-tool)  It's a command-line program for managing the JSON file and includes options for creating and maintaining the service attributes necessary to use Duo authentication.
 
 ### Clone the `cas-server-support-duo` project
 ```
@@ -57,21 +57,21 @@ You'll also need to add `DuoCredentialsToPrincipalResolver` to the list of princ
 
 ```xml
 <bean id="authenticationManager" class="org.jasig.cas.authentication.PolicyBasedAuthenticationManager">
-  <constructor-arg>
+	<constructor-arg>
 		<list>
-		  <ref bean="ldapAuthenticationHandler" />
+			<ref bean="ldapAuthenticationHandler" />
 			<ref bean="duoAuthenticationHandler" />
 		</list>
-  </constructor-arg>
-  <property name="authenticationMetaDataPopulators">
-    <list>
-      <bean class="edu.weber.cas.duo.authentication.UsernamePasswordAuthenticationMetaDataPopulator"/>
-      <bean class="edu.weber.cas.duo.authentication.DuoAuthenticationMetaDataPopulator"/>
-    </list>
-  </property>
-  <property name="authenticationPolicy">
-    <bean class="org.jasig.cas.authentication.AnyAuthenticationPolicy" p:tryAll="true"/>
-  </property>
+  	</constructor-arg>
+  	<property name="authenticationMetaDataPopulators">
+  		<list>
+      			<bean class="edu.weber.cas.duo.authentication.UsernamePasswordAuthenticationMetaDataPopulator"/>
+      			<bean class="edu.weber.cas.duo.authentication.DuoAuthenticationMetaDataPopulator"/>
+    		</list>
+ 	</property>
+ 	<property name="authenticationPolicy">
+ 		<bean class="org.jasig.cas.authentication.AnyAuthenticationPolicy" p:tryAll="true"/>
+  	</property>
 </bean>
 
 <bean id="duoAuthenticationHandler" class="edu.weber.cas.duo.authentication.handler.DuoAuthenticationHandler" p:duoConfiguration-ref="duoConfiguration" />
@@ -143,7 +143,7 @@ Example service entry requiring any user who is a member of **EITHER** the `admi
             "extraAttributes": {
                 "casMFARequired": "CHECK_ATTRIBUTE",
                 "casMFAUserAttributes": {
-                  "memberOf": ["admins", "power-users"]
+                  "memberOf": ["CN=Admins,OU=groups,DC=example,DC=edu", "CN=Two Factor Auth,OU=groups,DC=example,DC=edu"]
                 }
             },
             "allowedToProxy": true,
@@ -295,7 +295,7 @@ The final step is to modify the login webflow to include the checks for TwoFacto
                           http://www.springframework.org/schema/webflow/spring-webflow-2.0.xsd">
 
     <var name="credential" class="org.jasig.cas.authentication.UsernamePasswordCredential" />
-    <!--<var name="duoCredentials" class="edu.usf.cims.cas.support.duo.authentication.principal.DuoCredentials" />-->
+    
     <on-start>
         <evaluate expression="initialFlowSetupAction" />
     </on-start>
