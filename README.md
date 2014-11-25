@@ -21,6 +21,8 @@ The wiki article on how to configure it is [here](https://wiki.jasig.org/display
 ### Use the JSON Service Registry
 You'll need to include the [Unicon cas-addons module](https://github.com/Unicon/cas-addons/tree/v1.10) in your Maven overlay.  In particular, you must use the [JSON Service Registry](https://github.com/Unicon/cas-addons/wiki/Configuring%20JSON%20Service%20Registry) to add Duo authentication.  The `extraAttributes` stored with each service are used to determine which services and users require two-factor authentication.
 
+I have writen a project to convert an exsisting service registry database (MySQL) to a JSON file. [cas-json-services](https://github.com/atticus88/cas-json-services) 
+
 I'll also take a minute to plug one of epierce's projects: [cas-json-tool](https://github.com/epierce/cas-json-tool)  It's a command-line program for managing the JSON file and includes options for creating and maintaining the service attributes necessary to use Duo authentication.
 
 ### Clone the `cas-server-support-duo` project
